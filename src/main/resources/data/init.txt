@@ -1,0 +1,5 @@
+max_containers:500
+docks_number:5
+container_max_load:0.75
+container_min_load:0.25
+containers_init_number:300
