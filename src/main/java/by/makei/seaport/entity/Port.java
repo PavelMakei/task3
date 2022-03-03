@@ -121,15 +121,11 @@ public class Port {
 
     public void pushDockPool(Dock dock) throws CustomException {
         locker.lock();
-        boolean isGoOn = false;
-
-
-        try {
-            while (isGoOn){
-            onReturnDock.await();}
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+////            onReturnDock.await();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         try {
             dockPool.push(dock);
             logger.log(Level.INFO, "thread {} return dockSize - {}", Thread.currentThread().getName(), dockPool.size());
