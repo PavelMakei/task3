@@ -16,7 +16,7 @@ public class ShipGenerator {
     private ShipGenerator() {
     }
 
-
+    //TODO correct factory
 
     public static List<Ship> getShips(int shipsNumber, int loadFactor, Port port) {
         Random random = new Random();

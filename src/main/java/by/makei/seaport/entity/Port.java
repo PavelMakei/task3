@@ -1,6 +1,5 @@
 package by.makei.seaport.entity;
 
-
 import by.makei.seaport.exception.CustomException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -28,10 +27,7 @@ public class Port {
     private final Condition onGetDock = locker.newCondition();
     private final Condition onReturnDock = locker.newCondition();
 
-
-
-    private Port() {
-    }
+    private Port() {}
 
     public static Port getInstance() { //double-checked locking
         if (instance == null) {
@@ -107,29 +103,23 @@ public class Port {
                 onGetDock.await();
             }
             dock = dockPool.pop();
-            logger.log(Level.INFO, "thread {} get dockSize - {}", Thread.currentThread().getName(), dockPool.size());
-            onReturnDock.signalAll();
+            logger.log(Level.INFO, "thread {} get dock {},dockSize - {}", Thread.currentThread().getName(),dock.getDockId(), dockPool.size());
+            onReturnDock.signal();
             return dock;
         }catch (InterruptedException e){
             logger.log(Level.ERROR, "thread {} was interrupted", Thread.currentThread().getName(), e);
             } finally {
                 locker.unlock();
             }
-
         throw new CustomException("Dock wasn't given");
     }
 
     public void pushDockPool(Dock dock) throws CustomException {
         locker.lock();
-//        try {
-////            onReturnDock.await();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
         try {
             dockPool.push(dock);
             logger.log(Level.INFO, "thread {} return dockSize - {}", Thread.currentThread().getName(), dockPool.size());
-            onGetDock.signalAll();
+            onGetDock.signal();
         } finally {
             locker.unlock();
         }

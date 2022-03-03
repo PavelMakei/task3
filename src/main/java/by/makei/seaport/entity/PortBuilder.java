@@ -1,6 +1,5 @@
 package by.makei.seaport.entity;
 
-import by.makei.seaport.exception.CustomException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
