@@ -1,12 +1,13 @@
 package by.makei.seaport.entity;
 
+
 import by.makei.seaport.exception.CustomException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -22,12 +23,17 @@ public class Port {
     private ArrayDeque<Dock> dockPool;
     private AtomicInteger debit;
     private AtomicInteger credit;
-    private Lock lock;
+    private AtomicInteger shipCounter;
+    private final Lock locker = new ReentrantLock();
+    private final Condition onGetDock = locker.newCondition();
+    private final Condition onReturnDock = locker.newCondition();
+
+
 
     private Port() {
     }
 
-    public static Port getInstance()  { //double-checked locking
+    public static Port getInstance() { //double-checked locking
         if (instance == null) {
             synchronized (Port.class) {
                 if (instance == null) {
@@ -44,10 +50,6 @@ public class Port {
 
     public void setMaxContainersNumber(double maxContainersNumber) {
         this.maxContainersNumber = maxContainersNumber;
-    }
-
-    public double getDocksNumber() {
-        return docksNumber;
     }
 
     public void setDocksNumber(double docksNumber) {
@@ -78,51 +80,86 @@ public class Port {
         this.containersNumber = containersNumber;
     }
 
-    public void initialise() {
+    public AtomicInteger getDebit() {
+        return debit;
+    }
 
+    public AtomicInteger getCredit() {
+        return credit;
+    }
+
+    public void initialise() {
         debit = new AtomicInteger(0);
         credit = new AtomicInteger(0);
-        lock = new ReentrantLock();
         dockPool = new ArrayDeque<>();
+        shipCounter = new AtomicInteger(0);
+
         for (int i = 0; i < docksNumber; i++) {
             dockPool.push(new Dock(i, this));
         }
     }
 
-    public Dock popDockPool() {
-        while (true) {
-            if (!dockPool.isEmpty()) {
-                try {
-                    lock.lock();
-                    if (!dockPool.isEmpty()) {
-                        logger.log(Level.INFO, "thread {} get dockSize - ", Thread.currentThread().getName(), dockPool.size() );
-                        return dockPool.pop();
-                    }
-                } finally {
-                    lock.unlock();
-                }
+    public Dock popDockPool() throws CustomException {
+        locker.lock();
+        Dock dock;
+        try {
+            while (dockPool.isEmpty()) {
+                onGetDock.await();
             }
+            dock = dockPool.pop();
+            logger.log(Level.INFO, "thread {} get dockSize - {}", Thread.currentThread().getName(), dockPool.size());
+            onReturnDock.signalAll();
+            return dock;
+        }catch (InterruptedException e){
+            logger.log(Level.ERROR, "thread {} was interrupted", Thread.currentThread().getName(), e);
+            } finally {
+                locker.unlock();
+            }
+
+        throw new CustomException("Dock wasn't given");
+    }
+
+    public void pushDockPool(Dock dock) throws CustomException {
+        locker.lock();
+        boolean isGoOn = false;
+
+
+        try {
+            while (isGoOn){
+            onReturnDock.await();}
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            dockPool.push(dock);
+            logger.log(Level.INFO, "thread {} return dockSize - {}", Thread.currentThread().getName(), dockPool.size());
+            onGetDock.signalAll();
+        } finally {
+            locker.unlock();
         }
     }
 
-    public void pushDockPool(Dock dock) {
-        while (true) {
-            if (!dockPool.isEmpty()) {
-                try {
-                    lock.lock();
-                    if (!dockPool.isEmpty()) {
-                        dockPool.push(dock);
-                        logger.log(Level.INFO, "thread {} return dockSize - ", Thread.currentThread().getName(), dockPool.size() );
-                        return;
-                    }
-                } finally {
-                    lock.unlock();
-                }
-            }
-        }
+    public AtomicInteger getShipCounter() {
+        return shipCounter;
     }
 
+    public void incrementContainer() {
+        containersNumber.getAndIncrement();
+        debit.getAndIncrement();
+    }
 
+    public void decrementContainer() {
+        containersNumber.getAndDecrement();
+        credit.getAndIncrement();
+    }
+
+    public void incrementShipsCounter() {
+        shipCounter.getAndIncrement();
+    }
+
+    public void decrementShipsCounter() {
+        shipCounter.getAndDecrement();
+    }
 
     @Override
     public String toString() {
@@ -139,13 +176,4 @@ public class Port {
         return sb.toString();
     }
 
-    public void pushContainer() {
-        containersNumber.getAndIncrement();
-        debit.getAndIncrement();
-    }
-
-    public void popContainer() {
-        containersNumber.getAndDecrement();
-        credit.getAndIncrement();
-    }
 }

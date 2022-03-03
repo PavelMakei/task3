@@ -1,6 +1,8 @@
 package by.makei.seaport.entity;
 
 
+import by.makei.seaport.exception.CustomException;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -34,25 +36,37 @@ public class Ship extends Thread {
         return containersMaxNumber > containerExists;
     }
 
-    public void popContainer() {
+    public void decrementContainer() {
         containerExists--;
     }
 
-    public void pushContainer() {
+    public void incrementContainer() {
         containerExists++;
     }
 
-
     @Override
     public void run() {
-        dock = port.popDockPool();
+        port.incrementShipsCounter();
+        try {
+            dock = port.popDockPool();
+        } catch (CustomException e) {
+            logger.log(Level.ERROR,"can't get dock",e);
+            e.printStackTrace();
+        }
+
         dock.setShip(this);
         if (containerExists != 0) {
             dock.unLoadShip();
         } else {
             dock.loadShip();
         }
-        port.pushDockPool(dock);
+        try {
+            port.pushDockPool(dock);
+        } catch (CustomException e) {
+            logger.log(Level.ERROR,"can't return dock",e);
+            e.printStackTrace();
+        }
         dock.setShip(null);
+        port.decrementShipsCounter();
     }
 }
