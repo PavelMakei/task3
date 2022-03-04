@@ -8,8 +8,8 @@ import org.jetbrains.annotations.NotNull;
 
 
 public class Ship extends Thread {
-    private static Logger logger = LogManager.getLogger();
-    private int containersMaxNumber;
+    private static final Logger logger = LogManager.getLogger();
+    private final int containersMaxNumber;
     private int containerExists;
     private Dock dock;
     Port port;
@@ -43,10 +43,10 @@ public class Ship extends Thread {
         try {
             dock = port.popDockPool();
         } catch (CustomException e) {
-            logger.log(Level.ERROR,"can't get dock",e);
+            logger.log(Level.ERROR, "can't get dock", e);
             e.printStackTrace();
         }
-            dock.setShip(this);
+        dock.setShip(this);
 
         if (containerExists != 0) {
             dock.unLoadShip();
@@ -57,7 +57,7 @@ public class Ship extends Thread {
             dock.setShip(null);
             port.pushDockPool(dock);
         } catch (CustomException e) {
-            logger.log(Level.ERROR,"can't return dock",e);
+            logger.log(Level.ERROR, "can't return dock", e);
             e.printStackTrace();
         }
         port.decrementShipsCounter();

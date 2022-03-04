@@ -7,8 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 public class Dock {
     private static final Logger logger = LogManager.getLogger();
-    private int dockId;
-    private Port port;
+    private final int dockId;
+    private final Port port;
     private Ship ship;
 
     public Dock(int dockId, Port port) {
@@ -31,9 +31,9 @@ public class Dock {
                 ship.decrementContainer();
                 port.incrementContainer();
                 try {
-                    TimeUnit.MILLISECONDS.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 } catch (InterruptedException e) {
-                    logger.log(Level.ERROR, "something go wrong", e);
+                    logger.log(Level.ERROR, "Interrupted", e);
                 }
             } else {
                 Thread.yield();
@@ -47,10 +47,10 @@ public class Dock {
                 port.decrementContainer();
                 ship.incrementContainer();
                 try {
-                    TimeUnit.MILLISECONDS.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(20);
 
                 } catch (InterruptedException e) {
-                    logger.log(Level.ERROR, "something go wrong", e);
+                    logger.log(Level.ERROR, "Interrupted", e);
                 }
             } else {
                 Thread.yield();

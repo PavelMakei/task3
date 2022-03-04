@@ -9,13 +9,7 @@ import java.util.Map;
 public class PortStringParserImpl implements PortStringParser {
     private static final Logger logger = LogManager.getLogger();
     private static final PortStringParserImpl instance = new PortStringParserImpl();
-
-    private static final String MAX_CONTAINERS_NUMBER = "max_containers";
-    private static final String DOCKS_NUMBER = "docks_number";
-    private static final String CONTAINER_MAX_LOAD_FACTOR = "container_max_load";
-    private static final String CONTAINER_MIN_LOAD_FACTOR = "container_min_load";
-    private static final String CONTAINERS_NUMBER_INIT_VALUE = "containers_init_number";
-    private static final String REGEXP_STRING_SPLITTER = "\\s";
+    private static final String REGEXP_STRING_SPLITTER = "\\s+";
     private static final String REGEXP_MAP_SPLITTER = ":";
 
 
