@@ -16,6 +16,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class PortRunner {
@@ -37,8 +39,12 @@ public class PortRunner {
 
         initialisePort();
         ships = shipGenerator.getShips(port, SHIPS_INIT_FILE_NAME);
-        logger.log(Level.INFO, "\n <<<<<<<<<< START >>>>>>>>>>\n");
-        ships.forEach(ship -> ship.start());
+
+        ExecutorService executor;
+        executor = Executors.newFixedThreadPool(15);
+        ships.forEach(ship -> executor.execute(ship));
+
+        logger.log(Level.INFO, "\n\n <<<<<<<<<< START >>>>>>>>>>\n");
 
         try {
             TimeUnit.SECONDS.sleep(1);
@@ -54,6 +60,7 @@ public class PortRunner {
             } catch (InterruptedException e) {
                 logger.log(Level.ERROR, "something go wrong", e);
             }
+            executor.shutdown();
         }
         logger.log(Level.INFO, "PortRunner finished work");
         logger.log(Level.INFO, "\nAvailable containers in port value - {} \nContainers income value - {} \nContainers outcome value - {}",
