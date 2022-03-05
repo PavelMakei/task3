@@ -4,7 +4,9 @@ import by.makei.seaport.exception.CustomException;
 import by.makei.seaport.parser.PortStringParser;
 import by.makei.seaport.parser.impl.PortStringParserImpl;
 import by.makei.seaport.reader.CustomFileReader;
+import by.makei.seaport.reader.ZipFileReader;
 import by.makei.seaport.reader.impl.CustomFileReaderImpl;
+import by.makei.seaport.reader.impl.ZipFileReaderImpl;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,7 +46,13 @@ public class ShipGenerator {
     //TODO correct factory?
 
     public List<Ship> getShips(Port port, String shipsInitFileName) throws CustomException {
-        setVariables(shipsInitFileName);
+        setValues(readValuesFromFile(shipsInitFileName));
+        List<Ship> ships = buildShipsList(port);
+        return ships;
+    }
+
+    public List<Ship> getShips(Port port, String archiveFileName, String shipsInitFileName) throws CustomException {
+        setValues(readValuesFromZipFile(archiveFileName, shipsInitFileName));
         List<Ship> ships = buildShipsList(port);
         return ships;
     }
@@ -66,9 +74,17 @@ public class ShipGenerator {
         return ships;
     }
 
-    private void setVariables(String shipsInitFileName) throws CustomException {
+    private String readValuesFromFile(String shipsInitFileName) throws CustomException {
         CustomFileReader reader = CustomFileReaderImpl.getInstance();
-        String initDataText = reader.readLinesFromFile(shipsInitFileName);
+        return reader.readLinesFromFile(shipsInitFileName);
+    }
+
+    private String readValuesFromZipFile(String archiveFileName, String shipsInitFileName) throws CustomException {
+        ZipFileReader reader = ZipFileReaderImpl.getInstance();
+        return reader.readLinesFromZipFile(archiveFileName, shipsInitFileName);
+    }
+
+    private void setValues(String initDataText) {
         PortStringParser parser = PortStringParserImpl.getInstance();
         Map<String, Double> initMap = parser.parse(initDataText);
 
