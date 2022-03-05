@@ -13,7 +13,8 @@ public class Ship extends Thread {
     private final int containersMaxNumber;
     private int containerExists;
     private Dock dock;
-    Port port;
+    private Port port;
+    private WaterArea waterArea;
 
     public Ship(@NotNull String name, Port port, int containersMaxNumber, int containerExists) {
         super("Ship - " + name);
@@ -21,6 +22,8 @@ public class Ship extends Thread {
         this.port = port;
         this.containersMaxNumber = containersMaxNumber;
         this.containerExists = containerExists;
+        this.waterArea = WaterArea.getInstance();
+
     }
 
     public boolean isContainerExist() {
@@ -46,11 +49,16 @@ public class Ship extends Thread {
     @Override
     public void run() {
         port.incrementShipsCounter();
+
+
         try {
+            waterArea.getIntoWaterArea();
             dock = port.popDockPool();
         } catch (CustomException e) {
             logger.log(Level.ERROR, "can't get dock", e);
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            logger.log(Level.ERROR, "Process was interrupted {}",Thread.currentThread().getName(), e);
         }
         dock.setShip(this);
 
@@ -62,9 +70,12 @@ public class Ship extends Thread {
         try {
             dock.setShip(null);
             port.pushDockPool(dock);
+            waterArea.getOutWaterArea();
         } catch (CustomException e) {
             logger.log(Level.ERROR, "can't return dock", e);
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            logger.log(Level.ERROR, "Process was interrupted {}",Thread.currentThread().getName(), e);
         }
         port.decrementShipsCounter();
     }
