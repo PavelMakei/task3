@@ -5,12 +5,26 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class PortLogistics extends Thread {
-    private static final Logger logger = LogManager.getLogger();
-    private final Port port;
+import java.util.TimerTask;
 
-    public PortLogistics(Port port) {
-        this.port = port;
+public class PortLogistics extends TimerTask {
+    private static final Logger logger = LogManager.getLogger();
+    private static volatile PortLogistics instance;
+    private static Port port;
+
+    private PortLogistics() {
+    }
+
+    public static PortLogistics getInstance(Port port) { //double-checked locking
+        if (instance == null) {
+            synchronized (Port.class) {
+                if (instance == null) {
+                    instance = new PortLogistics();
+                    PortLogistics.port = Port.getInstance();
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
@@ -20,6 +34,7 @@ public class PortLogistics extends Thread {
         int numberContainersBottomLimit = (int) (maxContainersNumber * port.getContainerMinLoadFactor());
         int count = 0;
 
+        logger.log(Level.DEBUG, "Logistic started work");
         if (port.getContainersNumber().intValue() > numberContainersTopLimit) {
             while (port.getContainersNumber().intValue() > maxContainersNumber / 2) {
                 port.decrementContainer();
@@ -33,6 +48,6 @@ public class PortLogistics extends Thread {
             }
             logger.log(Level.INFO, "Removed {} containers by logistics", count);
         }
+        logger.log(Level.DEBUG, "Logistic finished work");
     }
-
 }

@@ -58,8 +58,8 @@ public class ShipGenerator {
         for (int i = 0; i < shipsNumber; i++) {
 
             boolean containersPresent = random.nextFloat() < shipIsEmptyProbability;
-            int containersNumber = containersPresent ? random.nextInt((int)maxContainersOnShip / 2, (int)maxContainersOnShip) : 0;
-            ship = new Ship("ship " + i, port, (int)maxContainersOnShip, containersNumber);
+            int containersNumber = containersPresent ? random.nextInt((int) maxContainersOnShip / 2, (int) maxContainersOnShip) : 0;
+            ship = new Ship("ship " + i, port, (int) maxContainersOnShip, containersNumber);
             ships.add(ship);
         }
         logger.log(Level.INFO, "{} ships created", ships.size());
@@ -70,21 +70,21 @@ public class ShipGenerator {
         CustomFileReader reader = CustomFileReaderImpl.getInstance();
         String initDataText = reader.readLinesFromFile(shipsInitFileName);
         PortStringParser parser = PortStringParserImpl.getInstance();
-        Map<String , Double> initMap = parser.parse(initDataText);
+        Map<String, Double> initMap = parser.parse(initDataText);
 
         initMap.forEach((key, value) -> {
             switch (key) {
                 case SHIP_MAX_CONTAINERS -> {
                     maxContainersOnShip = value;
-                    logger.log(Level.INFO, "{} is set = {}",key, value);
+                    logger.log(Level.INFO, "{} is set = {}", key, value);
                 }
                 case SHIP_IS_EMPTY_PROBABILITY -> {
                     shipIsEmptyProbability = value;
-                    logger.log(Level.INFO, "{} is set = {}",key, value);
+                    logger.log(Level.INFO, "{} is set = {}", key, value);
                 }
                 case SHIPS_NUMBER -> {
                     shipsNumber = value;
-                    logger.log(Level.INFO, "{} is set = {}",key, value);
+                    logger.log(Level.INFO, "{} is set = {}", key, value);
                 }
                 default -> logger.log(Level.ERROR, "unsupported type - {}", key);
             }

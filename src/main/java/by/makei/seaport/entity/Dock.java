@@ -3,6 +3,7 @@ package by.makei.seaport.entity;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.util.concurrent.TimeUnit;
 
 public class Dock {
@@ -31,7 +32,7 @@ public class Dock {
                 ship.decrementContainer();
                 port.incrementContainer();
                 try {
-                    TimeUnit.MILLISECONDS.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 } catch (InterruptedException e) {
                     logger.log(Level.ERROR, "Interrupted", e);
                 }
@@ -47,7 +48,7 @@ public class Dock {
                 port.decrementContainer();
                 ship.incrementContainer();
                 try {
-                    TimeUnit.MILLISECONDS.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(50);
 
                 } catch (InterruptedException e) {
                     logger.log(Level.ERROR, "Interrupted", e);

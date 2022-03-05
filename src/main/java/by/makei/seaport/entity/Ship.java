@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class Ship extends Thread {
     private static final Logger logger = LogManager.getLogger();
+    private final String shipName;
     private final int containersMaxNumber;
     private int containerExists;
     private Dock dock;
@@ -16,6 +17,7 @@ public class Ship extends Thread {
 
     public Ship(@NotNull String name, Port port, int containersMaxNumber, int containerExists) {
         super("Ship - " + name);
+        this.shipName = name;
         this.port = port;
         this.containersMaxNumber = containersMaxNumber;
         this.containerExists = containerExists;
@@ -35,6 +37,10 @@ public class Ship extends Thread {
 
     public void incrementContainer() {
         containerExists++;
+    }
+
+    public String getShipName() {
+        return shipName;
     }
 
     @Override

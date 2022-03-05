@@ -4,6 +4,7 @@ import by.makei.seaport.exception.CustomException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -26,8 +27,12 @@ public class Port {
     private final Lock locker = new ReentrantLock();
     private final Condition onGetDock = locker.newCondition();
     private final Condition onReturnDock = locker.newCondition();
+    private final AtomicInteger dockGetCount = new AtomicInteger(0);
+    private final AtomicInteger dockReturnCount = new AtomicInteger(0);
 
-    private Port() {}
+
+    private Port() {
+    }
 
     public static Port getInstance() { //double-checked locking
         if (instance == null) {
@@ -84,6 +89,15 @@ public class Port {
         return credit;
     }
 
+    public AtomicInteger getDockGetCount() {
+        return dockGetCount;
+    }
+
+    public AtomicInteger getDockReturnCount() {
+        return dockReturnCount;
+    }
+
+
     public void initialise() {
         debit = new AtomicInteger(0);
         credit = new AtomicInteger(0);
@@ -103,14 +117,15 @@ public class Port {
                 onGetDock.await();
             }
             dock = dockPool.pop();
-            logger.log(Level.INFO, "thread {} get dock {},dockSize - {}", Thread.currentThread().getName(),dock.getDockId(), dockPool.size());
+            dockGetCount.incrementAndGet();
+            logger.log(Level.INFO, "thread {} get dock {},free docks - {}", Thread.currentThread().getName(), dock.getDockId(), dockPool.size());
             onReturnDock.signal();
             return dock;
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             logger.log(Level.ERROR, "thread {} was interrupted", Thread.currentThread().getName(), e);
-            } finally {
-                locker.unlock();
-            }
+        } finally {
+            locker.unlock();
+        }
         throw new CustomException("Dock wasn't given");
     }
 
@@ -118,7 +133,8 @@ public class Port {
         locker.lock();
         try {
             dockPool.push(dock);
-            logger.log(Level.INFO, "thread {} return dockSize - {}", Thread.currentThread().getName(), dockPool.size());
+            dockReturnCount.incrementAndGet();
+            logger.log(Level.INFO, "thread {} return dock, free docks - {}", Thread.currentThread().getName(), dockPool.size());
             onGetDock.signal();
         } finally {
             locker.unlock();

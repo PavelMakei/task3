@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,29 +43,33 @@ public class PortRunner {
 
         ExecutorService executor;
         executor = Executors.newFixedThreadPool(15);
-        ships.forEach(ship -> executor.execute(ship));
-
         logger.log(Level.INFO, "\n\n <<<<<<<<<< START >>>>>>>>>>\n");
 
+        ships.forEach(ship -> executor.execute(ship));
+        executor.shutdown();
+        startLogisticTimer();
+
         try {
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.MILLISECONDS.sleep(100);//waiting for any ship will be added to port
         } catch (InterruptedException e) {
             logger.log(Level.ERROR, "sleep was interrupted");
         }
 
         while (port.getShipCounter().intValue() > 0) {
-            PortLogistics portLogistics = new PortLogistics(port);
-            portLogistics.start();
-            try {
-                TimeUnit.SECONDS.sleep(1);
-            } catch (InterruptedException e) {
-                logger.log(Level.ERROR, "something go wrong", e);
-            }
-            executor.shutdown();
+            Thread.yield();
         }
-        logger.log(Level.INFO, "PortRunner finished work");
-        logger.log(Level.INFO, "\nAvailable containers in port value - {} \nContainers income value - {} \nContainers outcome value - {}",
+
+        logger.log(Level.INFO, "\n\n <<<<<<<<<< PortRunner finished work >>>>>>>>>>\n");
+        logger.log(Level.INFO, "\n{} - docks were gotten, {} - docks were returned\n", port.getDockGetCount(), port.getDockReturnCount());
+
+        logger.log(Level.INFO, "\n\nAvailable containers in port value - {} \nContainers income value - {} \nContainers outcome value - {}",
                 port.getContainersNumber().intValue(), port.getDebit().intValue(), port.getCredit().intValue());
+    }
+
+    private void startLogisticTimer() {
+        Timer timer = new Timer(true);
+        timer.schedule(PortLogistics.getInstance(port), 500, 1000);
+
     }
 
     private void initialisePort() throws CustomException {
