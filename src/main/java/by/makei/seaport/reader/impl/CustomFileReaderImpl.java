@@ -1,6 +1,7 @@
 package by.makei.seaport.reader.impl;
 
 
+import by.makei.seaport.entity.Port;
 import by.makei.seaport.exception.CustomException;
 import by.makei.seaport.reader.CustomFileReader;
 import by.makei.seaport.util.CustomFileUtil;
@@ -13,17 +14,27 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class CustomFileReaderImpl implements CustomFileReader {
 
     private static final Logger logger = LogManager.getLogger();
-    private static final CustomFileReaderImpl instance = new CustomFileReaderImpl();
+    private static final AtomicReference<CustomFileReaderImpl> instance = new AtomicReference<>();
 
     private CustomFileReaderImpl() {}
 
     public static CustomFileReaderImpl getInstance() {
-        return instance;
+        while (true) {
+            CustomFileReaderImpl current = instance.get();
+            if (current != null) {
+                return current;
+            }
+            current = new CustomFileReaderImpl();
+            if (instance.compareAndSet(null, current)) {
+                return current;
+            }
+        }
     }
 
     @Override

@@ -5,19 +5,29 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PortStringParserImpl implements PortStringParser {
     private static final Logger logger = LogManager.getLogger();
-    private static final PortStringParserImpl instance = new PortStringParserImpl();
+    private static final AtomicReference<PortStringParserImpl> instance = new AtomicReference<>();
     private static final String REGEXP_STRING_SPLITTER = "\\s+";
     private static final String REGEXP_MAP_SPLITTER = ":";
 
 
-    public static PortStringParserImpl getInstance() {
-        return instance;
-    }
-
     private PortStringParserImpl(){}
+
+    public static PortStringParserImpl getInstance() {
+        while (true) {
+            PortStringParserImpl current = instance.get();
+            if (current != null) {
+                return current;
+            }
+            current = new PortStringParserImpl();
+            if (instance.compareAndSet(null, current)) {
+                return current;
+            }
+        }
+    }
 
 
     @Override

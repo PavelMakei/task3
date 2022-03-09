@@ -7,13 +7,14 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Port {
     private static final Logger logger = LogManager.getLogger();
-    private static volatile Port instance;
+    private static final AtomicReference<Port> instance = new AtomicReference<>();
 
     private double maxContainersNumber;
     private double docksNumber;
@@ -31,18 +32,19 @@ public class Port {
     private final AtomicInteger dockReturnCount = new AtomicInteger(0);
 
 
-    private Port() {
-    }
+    private Port() {}
 
-    public static Port getInstance() { //double-checked locking
-        if (instance == null) {
-            synchronized (Port.class) {
-                if (instance == null) {
-                    instance = new Port();
-                }
+    public static Port getInstance() { //locking by compare and set
+        while (true) {
+            Port current = instance.get();
+            if (current != null) {
+                return current;
+            }
+            current = new Port();
+            if (instance.compareAndSet(null, current)) {
+                return current;
             }
         }
-        return instance;
     }
 
     public double getMaxContainersNumber() {

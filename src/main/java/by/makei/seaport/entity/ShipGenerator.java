@@ -16,10 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ShipGenerator {
     private static final Logger logger = LogManager.getLogger();
-    private static volatile ShipGenerator instance;
+    private static final AtomicReference<ShipGenerator> instance = new AtomicReference<>();
     private static final String SHIP_MAX_CONTAINERS = "ship_max_containers";
     private static final String SHIP_IS_EMPTY_PROBABILITY = "ship_is_empty_probability";
     private static final String SHIPS_NUMBER = "ships_number";
@@ -33,14 +34,16 @@ public class ShipGenerator {
     }
 
     public static ShipGenerator getInstance() { //double-checked locking
-        if (instance == null) {
-            synchronized (Port.class) {
-                if (instance == null) {
-                    instance = new ShipGenerator();
-                }
+        while (true){
+            ShipGenerator shipGenerator = instance.get();
+            if(shipGenerator!=null){
+                return shipGenerator;
+            }
+            shipGenerator = new ShipGenerator();
+            if(instance.compareAndSet(null, shipGenerator)){
+                return shipGenerator;
             }
         }
-        return instance;
     }
 
     //TODO correct factory?

@@ -1,3 +1,3 @@
-ship_max_containers:50
+ship_max_containers:200
 ship_is_empty_probability:0.1
 ships_number:20

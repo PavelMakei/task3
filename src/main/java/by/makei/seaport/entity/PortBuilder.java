@@ -21,6 +21,8 @@ public class PortBuilder {
     private double containerMinLoadFactor = 0.25;
     private final AtomicInteger containersInitNumber = new AtomicInteger(300);
 
+    //TODO make it fully static?
+
     public Port getPort(Map<String, Double> initMap)  {
         Port port = Port.getInstance();
         initMap.forEach((key, value) -> {

@@ -6,26 +6,29 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class PortLogistics extends TimerTask {
     private static final Logger logger = LogManager.getLogger();
-    private static volatile PortLogistics instance;
+    private static final AtomicReference<PortLogistics> instance = new AtomicReference<>();
     private static Port port;
 
     private PortLogistics() {
     }
-
     public static PortLogistics getInstance(Port port) { //double-checked locking
-        if (instance == null) {
-            synchronized (Port.class) {
-                if (instance == null) {
-                    instance = new PortLogistics();
-                    PortLogistics.port = Port.getInstance();
-                }
+        while (true) {
+            PortLogistics current = instance.get();
+            if (current != null) {
+                return current;
+            }
+            current = new PortLogistics();
+            PortLogistics.port = port;
+            if (instance.compareAndSet(null, current)) {
+                return current;
             }
         }
-        return instance;
     }
+
 
     @Override
     public void run() {

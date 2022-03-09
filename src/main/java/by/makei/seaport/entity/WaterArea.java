@@ -6,23 +6,26 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WaterArea {
     private static final Logger logger = LogManager.getLogger();
     private final Semaphore semaphore = new Semaphore(10);
-    private static WaterArea instance;
+    private static final AtomicReference<WaterArea> instance = new AtomicReference<>();
 
     private WaterArea(){}
 
     public static WaterArea getInstance() {
-        if (instance == null) {
-            synchronized (Port.class) {
-                if (instance == null) {
-                    instance = new WaterArea();
-                }
+        while (true){
+            WaterArea waterArea = instance.get();
+            if(waterArea !=null){
+                return waterArea;
+            }
+            waterArea = new WaterArea();
+            if(instance.compareAndSet(null,waterArea)){
+                return waterArea;
             }
         }
-        return instance;
     }
 
     public void getIntoWaterArea() throws InterruptedException {
